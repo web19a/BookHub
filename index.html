@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookHub | Educational Resources</title>
+    <link rel="stylesheet" href="styles/auth.css">
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span class="light-icon">🌞</span>
+        <span class="dark-icon">🌙</span>
+    </button>
+
+    <!-- Auth Container -->
+    <div class="auth-container" id="authContainer">
+        <div class="flipper" id="flipper">
+            <!-- Login Form -->
+            <div class="auth-form front">
+                <h2>Educator Login</h2>
+                <div class="form-group">
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button class="primary-btn" onclick="login()">Sign In</button>
+                <p class="toggle-text">
+                    New user? <span onclick="toggleForm()">Create account</span>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div class="auth-form back">
+                <h2>Register Educator</h2>
+                <div class="form-group">
+                    <input type="text" id="registerName" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="registerEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="registerPassword" placeholder="Password" required>
+                </div>
+                <button class="primary-btn" onclick="register()">Register</button>
+                <p class="toggle-text">
+                    Existing user? <span onclick="toggleForm()">Sign in</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="main-app hidden" id="mainApp">
+        <nav class="navbar">
+            <div class="brand">
+                BookHub
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn" onclick="showSection('books')">Materials</button>
+                <button class="nav-btn" onclick="showSection('profile')">Profile</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Books Section -->
+        <section class="content-section active" id="booksSection">
+            <div class="admin-controls hidden" id="adminControls">
+                <h2>Manage Educational Materials</h2>
+                <form id="bookForm">
+                    <div class="form-group">
+                        <select id="bookType" onchange="toggleGuideFields()">
+                            <option value="textbook">Textbook</option>
+                            <option value="guide">Guide Book</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="subject" placeholder="Subject" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="grade" placeholder="Grade" min="1" max="12" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="bookTitle" placeholder="Title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>PDF Upload</label>
+                        <input type="text" id="pdfUrl" placeholder="PDF path (e.g., assets/pdfs/file.pdf)">
+                    </div>
+                    <div class="guide-fields hidden">
+                        <div class="form-group">
+                            <input type="text" id="guideBookName" placeholder="Original Book Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="publishYear" placeholder="Publish Year">
+                        </div>
+                    </div>
+                    <button type="button" class="primary-btn" onclick="addBook()">Add Material</button>
+                </form>
+            </div>
+
+            <div class="books-grid" id="booksGrid"></div>
+        </section>
+
+        <!-- Profile Section -->
+        <section class="content-section" id="profileSection">
+            <h2>Educator Profile</h2>
+            <div class="profile-info">
+                <div class="info-item">
+                    <span class="info-label">Name:</span>
+                    <span id="profileName"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span id="profileEmail"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Joined:</span>
+                    <span id="profileJoined"></span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>

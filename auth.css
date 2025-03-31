@@ -1,0 +1,39 @@
+.auth-container {
+    max-width: 500px;
+    margin: 100px auto;
+    padding: 2rem;
+}
+
+.flipper {
+    position: relative;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.auth-form {
+    position: absolute;
+    width: 100%;
+    backface-visibility: hidden;
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.auth-form.back {
+    transform: rotateY(180deg);
+}
+
+.flipped {
+    transform: rotateY(180deg);
+}
+
+.toggle-text {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.toggle-text span {
+    color: var(--primary);
+    cursor: pointer;
+}
