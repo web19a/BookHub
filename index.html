@@ -4,15 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookHub | Educational Resources</title>
-    <link rel="stylesheet" href="auth.css">
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="styles/auth.css">
+    <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
+
     <!-- Theme Toggle -->
     <button class="theme-toggle" onclick="toggleTheme()">
         <span class="light-icon">🌞</span>
         <span class="dark-icon">🌙</span>
     </button>
+
+    <!-- Splash Screen -->
+    <div class="splash-screen">
+        <svg viewBox="0 0 24 24">
+            <path d="M18 2h-6v7L9.5 7.5 7 9V2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+        </svg>
+    </div>
 
     <!-- Auth Container -->
     <div class="auth-container" id="authContainer">
@@ -59,14 +67,21 @@
                 BookHub
             </div>
             <div class="nav-links">
-                <button class="nav-btn" onclick="showSection('books')">Materials</button>
-                <button class="nav-btn" onclick="showSection('profile')">Profile</button>
-                <button class="nav-btn" onclick="logout()">Logout</button>
+                <button class="nav-btn" onclick="showSection('books')">📚 Materials</button>
+                <button class="nav-btn" onclick="showSection('profile')">👤 Profile</button>
+                <button class="nav-btn" onclick="showAbout()">ℹ️ About</button>
+                <button class="nav-btn" onclick="logout()">🚪 Logout</button>
             </div>
         </nav>
 
         <!-- Books Section -->
         <section class="content-section active" id="booksSection">
+            <!-- Inside booksSection, below admin controls -->
+            <div class="search-container">
+                <input type="text" id="bookSearch" placeholder="Search books..." oninput="loadBooks()" class="search-input">
+            </div>
+            <!-- Inside booksSection, below admin controls -->
+            <div id="gradeFilters" class="grade-filters"></div>
             <div class="admin-controls hidden" id="adminControls">
                 <h2>Manage Educational Materials</h2>
                 <form id="bookForm">
@@ -123,8 +138,18 @@
             </div>
         </section>
     </div>
+    <div class="about-overlay hidden" id="aboutOverlay" onclick="hideAbout(event)">
+        <div class="about-content">
+            <button class="close-btn" onclick="hideAbout()">&times;</button>
+            <h2>About BookHub</h2>
+            <p>
+                Educational resource platform for educators...
+            </p>
+            <!-- Add your about content here -->
+        </div>
+    </div>
 
-    <script src="auth.js"></script>
-    <script src="app.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/app.js"></script>
 </body>
 </html>
