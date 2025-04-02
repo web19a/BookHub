@@ -160,3 +160,220 @@ input, select, textarea {
     background: #dc2626;
     transform: translateY(-1px);
 }
+
+/* Splash Screen Animation */
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: bookOpen 2s ease-in-out forwards;
+}
+
+@keyframes bookOpen {
+    0% {
+        clip-path: polygon(50% 0%, 50% 0%, 50% 100%, 50% 100%);
+    }
+    50% {
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.splash-screen svg {
+    width: 100px;
+    height: 100px;
+    fill: white;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+/* Search Container */
+.search-container {
+    margin: 1.5rem 0;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.8rem 1.5rem;
+    border: 2px solid var(--primary);
+    border-radius: 2rem;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 8px rgba(79, 70, 229, 0.3);
+}
+
+/* Grade Filters */
+.grade-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.grade-filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--primary);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.grade-filter-btn.active,
+.grade-filter-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* About Overlay */
+.about-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.about-content {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 1rem;
+    position: relative;
+    max-width: 600px;
+    width: 90%;
+    aspect-ratio: 1/1;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text);
+}
+
+/* Ensure overlay stays on top */
+.navbar {
+    position: relative;
+    z-index: 100;
+}
+
+/* Enhanced Navbar Styles */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--primary);
+}
+
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+    position: relative;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 0.5rem;
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover Effect */
+.nav-btn:hover {
+    background: rgba(var(--primary-rgb), 0.1);
+    transform: translateY(-2px);
+}
+
+/* Active State */
+.nav-btn.active {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.nav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Click Animation */
+.nav-btn:active {
+    transform: scale(0.95);
+}
+
+/* Ripple Effect */
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.nav-btn:hover::before {
+    width: 150%;
+    height: 150%;
+}
+
+@keyframes slideIn {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+/* Add to :root */
+:root {
+    --primary-rgb: 79, 70, 229;
+}
