@@ -1,7 +1,9 @@
-// app.js - Complete Fixed Version
+// app.js - Complete Educational Resource Management System
 let currentUser = JSON.parse(sessionStorage.getItem('currentUser')) || null;
 
-// Validated Default Books Data
+// ========================
+// DATA CONFIGURATION
+// ========================
 const DEFAULT_BOOKS = [
     {
         type: "textbook",
@@ -70,15 +72,16 @@ const DEFAULT_BOOKS = [
         added: "2024-01-01T00:00:00Z"
     }
 ];
-
-// Book Initialization with Validation
+// ========================
+// CORE FUNCTIONALITY
+// ========================
 function initializeBooks() {
     if (!localStorage.getItem('books')) {
         const validatedBooks = DEFAULT_BOOKS.map(book => ({
             type: book.type || 'textbook',
-            subject: book.subject ? book.subject.charAt(0).toUpperCase() + book.subject.slice(1) : 'General',
-            grade: book.grade?.toString() || 'N/A',
-            title: book.title || 'Untitled Book',
+            subject: book.subject ? formatSubject(book.subject) : 'General',
+            grade: book.grade?.toString().padStart(2, '0') || '00',
+            title: book.title || 'Untitled Resource',
             pdfUrl: book.pdfUrl || '',
             ...(book.type === 'guide' && {
                 bookName: book.bookName || '',
@@ -90,218 +93,340 @@ function initializeBooks() {
     }
 }
 
-// Enhanced Book Management
-function addBook() {
-    const books = JSON.parse(localStorage.getItem('books')) || [];
-    const form = document.getElementById('bookForm');
-    
-    // Validate required fields
-    const requiredFields = [
-        'subject', 'grade', 'bookTitle', 'pdfUrl'
-    ].map(id => document.getElementById(id));
-    
-    const missingField = requiredFields.find(field => !field.value.trim());
-    if (missingField) {
-        alert('Please fill all required fields');
-        missingField.focus();
-        return;
-    }
-
-    // Sanitize inputs
-    const newBook = {
-        type: document.getElementById('bookType').value,
-        subject: document.getElementById('subject').value.trim().replace(/^./, c => c.toUpperCase()),
-        grade: document.getElementById('grade').value.replace(/\D/g, '').padStart(2, '0'),
-        title: document.getElementById('bookTitle').value.trim(),
-        pdfUrl: document.getElementById('pdfUrl').value.trim(),
-        added: new Date().toISOString()
-    };
-
-    if (newBook.type === 'guide') {
-        newBook.bookName = document.getElementById('guideBookName').value.trim();
-        newBook.publishYear = document.getElementById('publishYear').value.trim();
-    }
-
-    // Check for duplicates
-    if (books.some(b => b.title.toLowerCase() === newBook.title.toLowerCase())) {
-        alert('This book title already exists!');
-        return;
-    }
-
-    books.push(newBook);
-    localStorage.setItem('books', JSON.stringify(books));
-    loadBooks();
-    form.reset();
-    toggleGuideFields();
+function formatSubject(subject) {
+    return subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
 }
 
-// Robust Book Loading
-function loadBooks() {
+// ========================
+// FILTER & SEARCH SYSTEM
+// ========================
+function createGradeFilters() {
+    const container = document.getElementById('gradeFilters');
+    if (!container) return;
+
+    const books = JSON.parse(localStorage.getItem('books')) || [];
+    const grades = [...new Set(books.map(book => book.grade))].sort((a, b) => a - b);
+    
+    container.innerHTML = `
+        <button class="grade-filter-btn active" onclick="loadBooks()">All Grades</button>
+        ${grades.map(grade => `
+            <button class="grade-filter-btn" 
+                onclick="loadBooks('${grade}')"
+                data-grade="${grade}">
+                Grade ${grade}
+            </button>
+        `).join('')}
+    `;
+
+    container.querySelectorAll('.grade-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            container.querySelectorAll('.grade-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+function loadBooks(selectedGrade) {
     const booksGrid = document.getElementById('booksGrid');
     if (!booksGrid) return;
 
     try {
-        const books = JSON.parse(localStorage.getItem('books')) || [];
-        
-        booksGrid.innerHTML = books.map(book => {
-            const safeBook = {
-                title: book.title || 'Untitled Book',
-                subject: book.subject || 'Not Specified',
-                grade: book.grade?.toString() || 'N/A',
-                type: book.type || 'textbook',
-                pdfUrl: book.pdfUrl || '',
-                bookName: book.bookName || '',
-                publishYear: book.publishYear || ''
-            };
+        let books = JSON.parse(localStorage.getItem('books')) || [];
+        const searchTerm = document.getElementById('bookSearch').value.toLowerCase();
 
-            return `
-                <div class="book-card">
-                    <div class="book-type">${safeBook.type.toUpperCase()}</div>
-                    <h3>${safeBook.title}</h3>
-                    <div class="book-details">
-                        <p><strong>Subject:</strong> ${safeBook.subject}</p>
-                        <p><strong>Grade:</strong> ${safeBook.grade}</p>
-                        ${safeBook.type === 'guide' ? `
-                            <p><strong>Based on:</strong> ${safeBook.bookName}</p>
-                            <p><strong>Published:</strong> ${safeBook.publishYear}</p>
-                        ` : ''}
-                    </div>
-                    <div class="book-actions">
-                        <button class="pdf-btn" 
-                            onclick="openPdf('${safeBook.pdfUrl}')"
-                            ${!safeBook.pdfUrl ? 'disabled title="PDF unavailable"' : ''}>
-                            View PDF
-                        </button>
-                        ${currentUser?.role === 'admin' ? `
-                            <button class="delete-btn" 
-                                onclick="deleteBook('${safeBook.title.replace(/'/g, "\\'")}')">
-                                Delete
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('');
+        books = books.filter(book => {
+            const matchesGrade = !selectedGrade || book.grade === selectedGrade;
+            const matchesSearch = !searchTerm || 
+                book.title.toLowerCase().includes(searchTerm) ||
+                book.subject.toLowerCase().includes(searchTerm) ||
+                book.grade.includes(searchTerm);
+            return matchesGrade && matchesSearch;
+        });
 
+        renderBooks(books);
     } catch (error) {
-        console.error('Error loading books:', error);
-        booksGrid.innerHTML = '<p class="error">Error loading materials. Please refresh the page.</p>';
+        handleLoadingError(error);
     }
 }
 
-// Safe Delete Function
+function renderBooks(books) {
+    const booksGrid = document.getElementById('booksGrid');
+    booksGrid.innerHTML = books.map(book => `
+        <div class="book-card">
+            <div class="book-type ${book.type}">${book.type.toUpperCase()}</div>
+            <h3>${book.title}</h3>
+            <div class="book-details">
+                <p><strong>Subject:</strong> ${book.subject}</p>
+                <p><strong>Grade:</strong> ${book.grade}</p>
+                ${book.type === 'guide' ? `
+                    <p><strong>Based on:</strong> ${book.bookName}</p>
+                    <p><strong>Published:</strong> ${book.publishYear}</p>
+                ` : ''}
+            </div>
+            <div class="book-actions">
+                ${renderPDFButton(book)}
+                ${currentUser?.role === 'admin' ? renderDeleteButton(book) : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderPDFButton(book) {
+    return `
+        <button class="pdf-btn" 
+            onclick="openPdf('${book.pdfUrl}')"
+            ${!book.pdfUrl ? 'disabled title="PDF unavailable"' : ''}>
+            ${book.pdfUrl ? '📘 View PDF' : '🚫 PDF Missing'}
+        </button>
+    `;
+}
+
+function renderDeleteButton(book) {
+    return `
+        <button class="delete-btn" 
+            onclick="deleteBook('${book.title.replace(/'/g, "\\'")}')">
+            🗑️ Delete
+        </button>
+    `;
+}
+
+// ========================
+// BOOK MANAGEMENT
+// ========================
+function addBook() {
+    const form = document.getElementById('bookForm');
+    const newBook = validateBookForm();
+
+    if (!newBook) return;
+
+    const books = JSON.parse(localStorage.getItem('books')) || [];
+    if (isDuplicateBook(books, newBook)) return;
+
+    books.push(newBook);
+    updateBookStorage(books);
+    resetUIAfterSubmission();
+}
+
+function validateBookForm() {
+    const requiredFields = ['subject', 'grade', 'bookTitle', 'pdfUrl'];
+    const missingField = requiredFields.find(id => !document.getElementById(id).value.trim());
+
+    if (missingField) {
+        alert('Please fill all required fields');
+        document.getElementById(missingField).focus();
+        return null;
+    }
+
+    return {
+        type: document.getElementById('bookType').value,
+        subject: formatSubject(document.getElementById('subject').value.trim()),
+        grade: document.getElementById('grade').value.replace(/\D/g, '').padStart(2, '0'),
+        title: document.getElementById('bookTitle').value.trim(),
+        pdfUrl: document.getElementById('pdfUrl').value.trim(),
+        ...getGuideFields(),
+        added: new Date().toISOString()
+    };
+}
+
+function getGuideFields() {
+    if (document.getElementById('bookType').value === 'guide') {
+        return {
+            bookName: document.getElementById('guideBookName').value.trim(),
+            publishYear: document.getElementById('publishYear').value.trim()
+        };
+    }
+    return {};
+}
+
+function isDuplicateBook(books, newBook) {
+    if (books.some(b => b.title.toLowerCase() === newBook.title.toLowerCase())) {
+        alert('This book title already exists!');
+        return true;
+    }
+    return false;
+}
+
+function updateBookStorage(books) {
+    localStorage.setItem('books', JSON.stringify(books));
+    document.getElementById('bookSearch').value = '';
+    loadBooks();
+    createGradeFilters();
+}
+
+function resetUIAfterSubmission() {
+    document.getElementById('bookForm').reset();
+    toggleGuideFields();
+}
+
 function deleteBook(title) {
-    if (!confirm(`Permanently delete "${title}"? This cannot be undone!`)) return;
+    if (!confirm(`Permanently delete "${title}"?`)) return;
     
     try {
         let books = JSON.parse(localStorage.getItem('books')) || [];
         books = books.filter(book => book.title !== title);
         localStorage.setItem('books', JSON.stringify(books));
-        loadBooks();
+        updateBookStorage(books);
     } catch (error) {
         console.error('Delete error:', error);
-        alert('Failed to delete book. Please try again.');
+        alert('Failed to delete resource. Please try again.');
     }
 }
 
-// PDF Handling with Error Checking
+// ========================
+// UI CONTROLS
+// ========================
+function toggleGuideFields() {
+    const guideFields = document.querySelector('.guide-fields');
+    const bookType = document.getElementById('bookType');
+    if (!guideFields || !bookType) return;
+    
+    guideFields.classList.toggle('hidden', bookType.value !== 'guide');
+}
+
+function showSection(sectionId) {
+    try {
+        // 1. Remove active states from all elements
+        document.querySelectorAll('.content-section, .nav-btn').forEach(element => {
+            element.classList.remove('active');
+        });
+
+        // 2. Get target elements
+        const targetSection = document.getElementById(sectionId);
+        const targetButton = document.querySelector(`.nav-btn[onclick*="${sectionId}"]`);
+
+        // 3. Add active states with animation safeguards
+        if (targetSection) {
+            targetSection.classList.add('active');
+            targetSection.style.animation = 'fadeIn 0.3s ease';
+        }
+
+        if (targetButton) {
+            targetButton.classList.add('active');
+            targetButton.style.animation = 'buttonPop 0.2s ease';
+        }
+
+        // 4. Clear animations after completion
+        setTimeout(() => {
+            if (targetSection) targetSection.style.animation = '';
+            if (targetButton) targetButton.style.animation = '';
+        }, 300);
+
+    } catch (error) {
+        console.error('Section transition error:', error);
+        alert('Error loading section. Please try again.');
+    }
+}
+function toggleTheme() {
+    const theme = document.documentElement.getAttribute('data-theme');
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
 function openPdf(pdfUrl) {
     try {
-        if (!pdfUrl || pdfUrl === '#') {
-            throw new Error('PDF file not available');
-        }
-        
-        const pdfWindow = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
-        if (!pdfWindow || pdfWindow.closed) {
-            throw new Error('Popup blocked! Please allow popups for this site.');
-        }
+        if (!pdfUrl) throw new Error('PDF file not available');
+        window.open(pdfUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
         console.error('PDF error:', error);
         alert(`Error: ${error.message}`);
     }
 }
 
-// UI Functions with Error Prevention
-function toggleGuideFields() {
+// ========================
+// INITIALIZATION
+// ========================
+document.addEventListener('DOMContentLoaded', () => {
     try {
-        const guideFields = document.querySelector('.guide-fields');
-        const bookType = document.getElementById('bookType');
-        if (!guideFields || !bookType) return;
-        
-        guideFields.classList.toggle('visible', bookType.value === 'guide');
-    } catch (error) {
-        console.error('UI error:', error);
-    }
-}
-
-function showSection(sectionId) {
-    try {
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        const targetSection = document.getElementById(sectionId);
-        if (targetSection) targetSection.classList.add('active');
-    } catch (error) {
-        console.error('Section error:', error);
-    }
-}
-
-// Theme Management
-function toggleTheme() {
-    const theme = document.documentElement.getAttribute('data-theme') === 'dark' 
-        ? 'light' 
-        : 'dark';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-}
-
-// Comprehensive Initialization
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        // Theme setup
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-
-        // Data initialization
+        initializeTheme();
         initializeBooks();
-
-        // Auth state
-        currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-        
-        if (currentUser) {
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-
-            // Admin setup
-            if (currentUser.role === 'admin') {
-                const bookTypeSelect = document.getElementById('bookType');
-                if (bookTypeSelect) {
-                    bookTypeSelect.addEventListener('change', toggleGuideFields);
-                    document.getElementById('adminControls').classList.remove('hidden');
-                }
-            }
-
-            // Load data
-            loadBooks();
-            
-            // Profile setup
-            document.getElementById('profileName').textContent = currentUser.name || 'Guest';
-            document.getElementById('profileEmail').textContent = currentUser.email || 'No email';
-            document.getElementById('profileJoined').textContent = currentUser.joined 
-                ? new Date(currentUser.joined).toLocaleDateString() 
-                : 'Unknown';
-        } else {
-            document.getElementById('authContainer').classList.remove('hidden');
-            document.getElementById('mainApp').classList.add('hidden');
-        }
+        handleSplashScreen();
+        checkAuthState();
     } catch (error) {
-        console.error('Startup error:', error);
-        document.body.innerHTML = `
-            <div class="error-container">
-                <h1>Application Error</h1>
-                <p>${error.message}</p>
-                <button onclick="location.reload()">Reload Page</button>
-            </div>
-        `;
+        displayCriticalError(error);
     }
+});
+
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function handleSplashScreen() {
+    const splashScreen = document.querySelector('.splash-screen');
+    if (splashScreen) {
+        setTimeout(() => {
+            splashScreen.style.opacity = '0';
+            splashScreen.style.visibility = 'hidden';
+        }, 2000);
+    }
+}
+
+function checkAuthState() {
+    currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    
+    if (currentUser) {
+        document.getElementById('authContainer').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        initializeAdminFeatures();
+        loadUserProfile();
+        loadBooks();
+        createGradeFilters();
+    } else {
+        document.getElementById('authContainer').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+    }
+}
+
+function initializeAdminFeatures() {
+    if (currentUser?.role === 'admin') {
+        const bookTypeSelect = document.getElementById('bookType');
+        if (bookTypeSelect) {
+            bookTypeSelect.addEventListener('change', toggleGuideFields);
+            document.getElementById('adminControls').classList.remove('hidden');
+        }
+    }
+}
+
+function loadUserProfile() {
+    document.getElementById('profileName').textContent = currentUser.name || 'Guest';
+    document.getElementById('profileEmail').textContent = currentUser.email || 'No email';
+    document.getElementById('profileJoined').textContent = 
+        currentUser.joined ? new Date(currentUser.joined).toLocaleDateString() : 'Unknown';
+}
+
+function displayCriticalError(error) {
+    console.error('Critical error:', error);
+    document.body.innerHTML = `
+        <div class="error-container">
+            <h1>⚠️ System Error</h1>
+            <p>${error.message}</p>
+            <button onclick="location.reload()" class="reload-btn">
+                Reload Application
+            </button>
+        </div>
+    `;
+}
+
+// ========================
+// ABOUT OVERLAY CONTROLS
+// ========================
+function showAbout() {
+    const overlay = document.getElementById('aboutOverlay');
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideAbout(event) {
+    // Only close if clicking outside content or on close button
+    if (event && event.target !== document.getElementById('aboutOverlay')) return;
+    
+    const overlay = document.getElementById('aboutOverlay');
+    overlay.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close with ESC key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideAbout();
 });
