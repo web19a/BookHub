@@ -388,12 +388,30 @@ function initializeAdminFeatures() {
     }
 }
 
-function loadUserProfile() {
-    document.getElementById('profileName').textContent = currentUser.name || 'Guest';
-    document.getElementById('profileEmail').textContent = currentUser.email || 'No email';
-    document.getElementById('profileJoined').textContent = 
-        currentUser.joined ? new Date(currentUser.joined).toLocaleDateString() : 'Unknown';
+// Replace profile section handling
+function showProfileOverlay() {
+    const overlay = document.getElementById('profileOverlay');
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
 }
+
+function hideProfile(event) {
+    if (event && event.target !== document.getElementById('profileOverlay')) return;
+    const overlay = document.getElementById('profileOverlay');
+    overlay.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Update nav button in HTML to:
+// <button class="nav-btn" onclick="showProfileOverlay()">👤 Profile</button>
+
+// Add to ESC key handler:
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        hideProfile();
+        hideAbout();
+    }
+});
 
 function displayCriticalError(error) {
     console.error('Critical error:', error);
@@ -426,7 +444,3 @@ function hideAbout(event) {
     document.body.style.overflow = 'auto';
 }
 
-// Close with ESC key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') hideAbout();
-});
